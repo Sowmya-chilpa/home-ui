@@ -127,7 +127,7 @@ const styles = `
   }
 `;
 
-function Accordion() {
+const Accordion = () => {
   const [data, setData] = useState([]);
   const [activeIndex, setActiveIndex] = useState(null);
 
