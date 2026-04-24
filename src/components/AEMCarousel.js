@@ -119,10 +119,7 @@ function AEMCarousel() {
                         <AEMImage src={`${AEM_HOST}${slide.image._path}`} alt={slide.title} />
                         <div style={{
                             position: "absolute", bottom: 0, left: 0, right: 0,
-                            background: "rgba(0,0,0,0.5)", color: "white", padding: "12px 16px", textAlign: "left"
                         }}>
-                            <h2 style={{ margin: 0, fontSize: "clamp(14px, 2.5vw, 22px)" }}>{slide.title}</h2>
-                            <p style={{ margin: 0, fontSize: "clamp(11px, 1.8vw, 15px)" }}>{slide.description.plaintext}</p>
                         </div>
                     </div>
                 ))}
