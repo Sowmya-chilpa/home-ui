@@ -4,6 +4,7 @@ import Accordion from './components/Accordion';
 import AEMCarousel from './components/AEMCarousel';
 import HeroBanner from './components/HeroBanner';
 import Header from './components/Header';
+import Footer from './components/Footer';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <AEMCarousel />
       <HeroBanner />
       <Accordion />
+      <Footer />
     </div>
   );
 }
