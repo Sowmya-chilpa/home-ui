@@ -101,7 +101,7 @@ function AEMCarousel() {
     );
 
     return (
-        <div style={{ maxWidth: "100%", margin: "20px auto", padding: "0 16px" }}>
+        <div style={{ maxWidth: "100%", }}>
             <Carousel
                 infiniteLoop={false}
                 autoPlay={false}
