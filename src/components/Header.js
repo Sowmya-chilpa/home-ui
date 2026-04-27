@@ -119,8 +119,8 @@ function Header() {
                     justifyContent: "space-between",
                     alignItems: "center",
                     padding: "12px 24px",
-                    backgroundColor: "#3b647a",
-                    color: "white",
+                    backgroundColor: "rgb(110 154 177)",
+                    color: "black",
                 }}
             >
                 <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
@@ -213,7 +213,7 @@ function Header() {
                                                         display: "block",
                                                         padding: "8px 12px",
                                                         textDecoration: "none",
-                                                        color: "#333",
+                                                        color: "black",
                                                     }}
                                                     onMouseEnter={(e) =>
                                                         (e.target.style.background = "#f5f5f5")
