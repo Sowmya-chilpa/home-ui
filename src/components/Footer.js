@@ -92,7 +92,7 @@ const Footer = () => {
 
         <div className="links">
           {linksArray.map((link, index) => (
-            <a key={index} href="#">
+            <a key={index} href="/">
               {link}
             </a>
           ))}
