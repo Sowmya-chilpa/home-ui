@@ -1,18 +1,19 @@
 import './App.css';
-import Accordion from './components/Accordion';
-import AEMCarousel from './components/AEMCarousel';
-import HeroBanner from './components/HeroBanner';
-import Header from './components/Header';
-import Footer from './components/Footer';
+import MainLayout from './Layout/MainLayout';
+import Home from './router/Home';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+
 
 function App() {
   return (
     <div className="App">
-      <Header />
-      <AEMCarousel />
-      <HeroBanner />
-      <Accordion />
-      <Footer />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Home />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </div>
   );
 }
