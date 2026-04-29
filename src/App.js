@@ -1,4 +1,5 @@
 import './App.css';
+import TripPlan from './components/TripPlan';
 import MainLayout from './Layout/MainLayout';
 import Home from './router/Home';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
@@ -11,6 +12,7 @@ function App() {
         <Routes>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
+            <Route path='/trip' element={<TripPlan />} />
           </Route>
         </Routes>
       </BrowserRouter>
