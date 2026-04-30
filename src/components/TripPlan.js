@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./TripPlan.css";
 
 const AEM_HOST = "https://katrina-nonmonogamous-pseudofamously.ngrok-free.dev";
 const ENDPOINT = `${AEM_HOST}/content/cq:graphql/TDTraining/endpoint.json`;
 
-function TripPlan() {
+
+const TripPlan = () => {
     const [packages, setPackages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetch(ENDPOINT, {
@@ -76,7 +80,10 @@ function TripPlan() {
 
                         <button
                             className="cta"
-                            onClick={() => window.location.href = pkg.ctapath}
+                            onClick={() => {
+                                const type = pkg.packageType?.toLowerCase().trim();
+                                navigate(`/packages?type=${type}`);
+                            }}
                         >
                             {pkg.ctalabel}
                         </button>
