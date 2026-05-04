@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import AEMImage from "./AEMImage"
 
 const AEM_HOST = "https://katrina-nonmonogamous-pseudofamously.ngrok-free.dev";
 const ENDPOINT = `${AEM_HOST}/content/cq:graphql/TDTraining/endpoint.json`;
+
 
 const css = `
 .container {
@@ -65,35 +67,6 @@ const css = `
 }
 `;
 
-function AEMImage({ src, alt }) {
-  const [objectUrl, setObjectUrl] = useState(null);
-
-  useEffect(() => {
-    let url;
-
-    fetch(src, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-        Authorization: "Basic " + btoa("admin:admin"),
-      },
-    })
-      .then((res) => res.blob())
-      .then((blob) => {
-        url = URL.createObjectURL(blob);
-        setObjectUrl(url);
-      })
-      .catch(console.error);
-
-    return () => {
-      if (url) URL.revokeObjectURL(url);
-    };
-  }, [src]);
-
-  if (!objectUrl) return <div className="placeholder" />;
-
-  return <img src={objectUrl} alt={alt} className="image" />;
-}
-
 function HeroBanner() {
   const [banners, setBanners] = useState([]);
 
@@ -144,7 +117,7 @@ function HeroBanner() {
               key={index}
               className="banner"
               style={{
-                flexDirection: isLeft ? "row" : "row-reverse", 
+                flexDirection: isLeft ? "row" : "row-reverse",
               }}
             >
               <div className="textSection">
