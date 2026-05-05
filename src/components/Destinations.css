@@ -2,7 +2,7 @@
   padding: 20px 0px ;
 }
 
-.sectionTitle {
+.destinationsHeading {
   font-size: 28px;
   font-weight: 600;
   margin-bottom: 16px;
@@ -28,7 +28,7 @@
   cursor: grabbing;
 }
 
-.card {
+.destinationCard  {
   min-width: 260px;
   width: 260px;
   height: 320px;
@@ -41,14 +41,14 @@
   background: #ccc;
 }
 
-.imageWrapper {
+.destinationImageWrapper   {
   position: absolute;
   inset: 0;            
   width: 100%;
   height: 100%;
 }
 
-.imageWrapper img {
+.destinationImageWrapper    img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -57,7 +57,7 @@
   pointer-events: none;   
 }
 
-.overlay {
+.destinationOverlay {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -68,14 +68,14 @@
   z-index: 1;
 }
 
-.cardTitle {
+.destinationTitle  {
   font-size: 18px;
   font-weight: 700;
   line-height: 1.2;
   text-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
 
-.cardTagline {
+.destinationTagline {
   font-size: 13px;
   margin-top: 4px;
   opacity: 0.9;
@@ -89,11 +89,11 @@
 }
 
 @media (max-width: 1024px) {
-  .container {
+  .destinationsContainer {
     padding: 18px 16px;
   }
 
-  .card {
+  .destinationCard  {
     min-width: 220px;
     width: 220px;
     height: 280px;
@@ -102,21 +102,24 @@
     padding: 6px 10px 14px;
     gap: 14px;
   }
-  .sectionTitle {
+  .destinationsHeading {
     font-size: 22px;
   }
 }
 
 @media (max-width: 600px) {
-  .container {
+  .destinationsContainer {
     padding: 16px 0;
   }
 
-  .sectionTitle {
+  .destinationsHeading {
     font-size: 18px;
     margin-bottom: 12px;
     padding: 0 16px;
     text-align: center;
+  }
+  .destinationOverlay {
+    padding: 24px 12px 12px;
   }
 
   .scrollContainer {
@@ -124,18 +127,18 @@
     gap: 12px;
   }
 
-  .card {
+  .destinationCard {
     min-width: 78%;  
     max-width: 260px;
-    height: 230px;
+    height: 280px;
     border-radius: 12px;
   }
 
-  .cardTitle {
+  .destinationTitle {
     font-size: 16px;
   }
 
-  .cardTagline {
+  .destinationTagline {
     font-size: 12px;
   }
 }

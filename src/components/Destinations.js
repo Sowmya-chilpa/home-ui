@@ -82,7 +82,7 @@ function Destinations() {
 
   return (
     <div className="destinationsContainer">
-      <h2 className="sectionTitle">Don't Know where to go? Explore here</h2>
+      <h2 className="destinationsHeading">Don't Know where to go? Explore here</h2>
 
       <div
         className="scrollContainer"
