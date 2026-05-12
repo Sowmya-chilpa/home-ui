@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { FaCirclePlay } from "react-icons/fa6";
+import { FiPauseCircle } from "react-icons/fi";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 
@@ -26,8 +28,8 @@ function AEMImage({ src, alt }) {
         return () => { if (url) URL.revokeObjectURL(url); };
     }, [src]);
 
-    if (!objectUrl) return <div style={{ width: "100%", height: "50vw", maxHeight: "500px", background: "#eee" }} />;
-    return <img src={objectUrl} alt={alt} style={{ width: "100%", height: "50vw", maxHeight: "500px", objectFit: "cover" }} />;
+    if (!objectUrl) return <div style={{ width: "100%", height: "50vw", maxHeight: "500px", background: "#eee", }} />;
+    return <img src={objectUrl} alt={alt} style={{ width: "100%", height: "50vw", maxHeight: "500px", objectFit: "cover", borderRadius: "15px" }} />;
 }
 
 function AEMCarousel() {
@@ -35,6 +37,7 @@ function AEMCarousel() {
     const [current, setCurrent] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [autoPlay, setAutoPlay] = useState(true);
 
     useEffect(() => {
         fetch(ENDPOINT, {
@@ -101,13 +104,14 @@ function AEMCarousel() {
     );
 
     return (
-        <div style={{ maxWidth: "100%", }}>
+        <div style={{ maxWidth: "100%", padding: "18px", }}>
             <Carousel
-                infiniteLoop={false}
-                autoPlay={false}
+                infiniteLoop={true}
+                autoPlay={autoPlay}
                 showThumbs={false}
                 showStatus={false}
                 swipeable={true}
+                showIndicators={false}
                 emulateTouch={true}
                 selectedItem={current}
                 onChange={(index) => setCurrent(index)}
@@ -115,16 +119,55 @@ function AEMCarousel() {
                 renderArrowNext={renderArrowNext}
             >
                 {slides.map((slide, index) => (
-                    <div key={index} style={{ position: "relative" }}>
+                    <div key={index} style={{ position: "relative", }}>
                         <AEMImage src={`${AEM_HOST}${slide.image._path}`} alt={slide.title} />
-                        <div style={{
-                            position: "absolute", bottom: 0, left: 0, right: 0,
-                        }}>
-                        </div>
                     </div>
                 ))}
+
             </Carousel>
-        </div>
+            <div style={{ display: "flex", justifyContent: "center", gap: "8px", }}>
+                <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "18px", marginRight: "10px" }}>
+                    {slides.map((_, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setCurrent(index)}
+                            style={{
+                                width: index === current ? "10px" : "8px",
+                                height: index === current ? "10px" : "8px",
+                                borderRadius: "50%",
+                                background: index === current ? "white" : "#bbb",
+                                border: index === current ? "2px solid rgb(110, 154, 177)" : "2px solid #bbb",
+                                cursor: "pointer",
+                                padding: 0,
+                                transition: "all 0.3s ease",
+                            }}
+                        />
+                    ))}
+                </div>
+
+                <div style={{ textAlign: "center", marginTop: "10px" }}>
+                    <button
+                        onClick={() => setAutoPlay((prev) => !prev)}
+                        style={{
+                            color: "black",
+                            fontSize: "25px",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 0,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+
+                        }}
+                    >
+                        {autoPlay ? <><FiPauseCircle /> <span style={{ fontSize: "15px", marginLeft: "4px" }}>Pause</span></> :
+                            <><FaCirclePlay /> <span style={{ fontSize: "15px", marginLeft: "4px" }}>Play</span></>}
+                    </button>
+                </div>
+            </div>
+
+        </div >
     );
 }
 
