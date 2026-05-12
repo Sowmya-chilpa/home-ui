@@ -178,12 +178,12 @@ const Accordion = () => {
           const isOpen = activeIndex === index;
           return (
             <div key={index} className="accordion-item">
-              <div className="accordion-header">
+              <div
+                className="accordion-header"
+                onClick={() => toggle(index)}
+              >
                 <span>{item.title}</span>
-                <span
-                  onClick={() => toggle(index)}
-                  className="accordion-icon"
-                >
+                <span className="accordion-icon">
                   {isOpen ? <FaChevronUp /> : <FaChevronDown />}
                 </span>
               </div>
