@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { FiSearch, FiUser, FiMenu, FiX, FiChevronDown } from "react-icons/fi";
+import { FiSearch, FiMenu, FiX, FiChevronDown } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import UserProfile from "../components/UserProfile";
 
 const AEM_HOST = "https://katrina-nonmonogamous-pseudofamously.ngrok-free.dev";
 const ENDPOINT = `${AEM_HOST}/content/cq:graphql/TDTraining/endpoint.json`;
@@ -23,30 +24,20 @@ function AEMImage({ src, alt, style }) {
             })
             .catch(console.error);
 
-        return () => {
-            if (url) URL.revokeObjectURL(url);
-        };
+        return () => { if (url) URL.revokeObjectURL(url); };
     }, [src]);
 
-    if (!objectUrl) {
-        return (
-            <div style={{ width: 60, height: 40, background: "#eee", borderRadius: 4 }} />
-        );
-    }
-
+    if (!objectUrl) return <div style={{ width: 60, height: 40, background: "#eee" }} />;
     return <img src={objectUrl} alt={alt} style={style} />;
 }
 
 function Header() {
     const [headerData, setHeaderData] = useState(null);
     const [loading, setLoading] = useState(true);
-
     const [hoveredIndex, setHoveredIndex] = useState(null);
     const timeoutRef = useRef(null);
-
     const [menuOpen, setMenuOpen] = useState(false);
     const [mobileExpandedIndex, setMobileExpandedIndex] = useState(null);
-
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
     useEffect(() => {
@@ -65,28 +56,24 @@ function Header() {
             },
             body: JSON.stringify({
                 query: `{
-          headerModelList {
-            items {
-              logo {
-                ... on ImageRef {
-                  _path
-                }
-              }
-              navLinks {
-                ... on NavitemModelModel {
-                  title
-                  path
-                  sublinks {
-                    ... on NavitemModelModel {
-                      title
-                      path
+                    headerModelList {
+                        items {
+                            logo { ... on ImageRef { _path } }
+                            navLinks {
+                                ... on NavitemModelModel {
+                                    title path
+                                    title2 path2
+                                    title3 path3
+                                    title4 path4
+                                    title5 path5
+                                    sublinks {
+                                        ... on NavitemModelModel { title path }
+                                    }
+                                }
+                            }
+                        }
                     }
-                  }
-                }
-              }
-            }
-          }
-        }`,
+                }`,
             }),
         })
             .then((res) => res.json())
@@ -105,33 +92,50 @@ function Header() {
 
     const { logo, navLinks } = headerData;
 
-    const navArray = Array.isArray(navLinks)
-        ? navLinks
-        : navLinks
-            ? [navLinks]
-            : [];
+    const navArray = [];
+    const rawLinks = Array.isArray(navLinks) ? navLinks : [navLinks];
+
+    rawLinks.forEach((raw) => {
+        Object.keys(raw)
+            .filter((k) => k.startsWith("title"))
+            .forEach((titleKey) => {
+                const suffix = titleKey.replace("title", "");
+                const pathKey = suffix ? `path${suffix}` : "path";
+
+                if (raw[titleKey] && raw[pathKey]) {
+                    navArray.push({
+                        title: raw[titleKey],
+                        path: raw[pathKey],
+                        sublinks: suffix === "" ? raw.sublinks || [] : [],
+                    });
+                }
+            });
+    });
+
+    const leftNav = navArray.slice(0, 3);
+    const rightNav = navArray.slice(3);
+
+    const linkStyle = {
+        textDecoration: "none",
+        color: "white",
+        fontWeight: "500",
+    };
 
     return (
-        <header style={{ fontFamily: "Arial", position: "relative", }}>
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "12px 24px",
-                    backgroundColor: "rgb(110 154 177)",
-                    color: "black",
-                }}
-            >
+        <header style={{ fontFamily: "Arial", position: "relative" }}>
+            <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "12px 24px",
+                backgroundColor: "rgb(110 154 177)",
+            }}>
+
                 <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                    <AEMImage
-                        src={`${AEM_HOST}${logo._path}`}
-                        alt="logo"
-                        style={{ height: 50, objectFit: "contain" }}
-                    />
+                    <AEMImage src={`${AEM_HOST}${logo._path}`} alt="logo" style={{ height: 50 }} />
 
                     {!isMobile &&
-                        navArray.map((nav, index) => {
+                        leftNav.map((nav, index) => {
                             const subArray = Array.isArray(nav.sublinks)
                                 ? nav.sublinks
                                 : nav.sublinks
@@ -147,10 +151,7 @@ function Header() {
                                         setHoveredIndex(index);
                                     }}
                                     onMouseLeave={() => {
-                                        timeoutRef.current = setTimeout(
-                                            () => setHoveredIndex(null),
-                                            200
-                                        );
+                                        timeoutRef.current = setTimeout(() => setHoveredIndex(null), 200);
                                     }}
                                 >
                                     <Link
@@ -166,41 +167,25 @@ function Header() {
                                         }}
                                     >
                                         {nav.title}
-                                        {subArray.length > 0 && (
-                                            <FiChevronDown
-                                                size={14}
-                                                style={{
-                                                    transition: "transform 0.2s",
-                                                    transform:
-                                                        hoveredIndex === index
-                                                            ? "rotate(180deg)"
-                                                            : "rotate(0deg)",
-                                                }}
-                                            />
-                                        )}
                                     </Link>
 
                                     {hoveredIndex === index && subArray.length > 0 && (
                                         <div
                                             onMouseEnter={() => {
-                                                if (timeoutRef.current)
-                                                    clearTimeout(timeoutRef.current);
+                                                if (timeoutRef.current) clearTimeout(timeoutRef.current);
                                             }}
                                             onMouseLeave={() => {
-                                                timeoutRef.current = setTimeout(
-                                                    () => setHoveredIndex(null),
-                                                    200
-                                                );
+                                                timeoutRef.current = setTimeout(() => setHoveredIndex(null), 200);
                                             }}
                                             style={{
                                                 position: "absolute",
                                                 top: "35px",
                                                 left: 0,
-                                                background: "#fff",
+                                                background: "rgb(110 154 177)",
                                                 color: "#000",
                                                 borderRadius: 6,
-                                                padding: "8px 0",
-                                                minWidth: 150,
+                                                padding: "2px",
+                                                minWidth: 60,
                                                 boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
                                                 zIndex: 10,
                                             }}
@@ -213,14 +198,8 @@ function Header() {
                                                         display: "block",
                                                         padding: "8px 12px",
                                                         textDecoration: "none",
-                                                        color: "black",
+                                                        color: "white",
                                                     }}
-                                                    onMouseEnter={(e) =>
-                                                        (e.target.style.background = "#f5f5f5")
-                                                    }
-                                                    onMouseLeave={(e) =>
-                                                        (e.target.style.background = "white")
-                                                    }
                                                 >
                                                     {sub.title}
                                                 </Link>
@@ -233,58 +212,38 @@ function Header() {
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
+
+                    {!isMobile && rightNav.map((nav, index) => (
+                        <Link key={index} to={nav.path} style={linkStyle}>
+                            {nav.title}
+                        </Link>
+                    ))}
+
                     {!isMobile && (
                         <div style={{ position: "relative" }}>
-                            <FiSearch
-                                size={18}
-                                style={{
-                                    position: "absolute",
-                                    top: "50%",
-                                    left: 10,
-                                    transform: "translateY(-50%)",
-                                    color: "#555",
-                                }}
-                            />
+                            <FiSearch size={18} style={{
+                                position: "absolute",
+                                top: "50%",
+                                left: 10,
+                                transform: "translateY(-50%)",
+                                color: "#555"
+                            }} />
                             <input
                                 placeholder="Search..."
                                 style={{
                                     padding: "6px 10px 6px 32px",
                                     border: "1px solid #ccc",
-                                    borderRadius: 4,
-                                    outline: "none",
+                                    borderRadius: 4
                                 }}
                             />
                         </div>
                     )}
 
-                    <div
-                        style={{
-                            width: 34,
-                            height: 34,
-                            borderRadius: "50%",
-                            background: "#f0f0f0",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                        }}
-                    >
-                        <FiUser size={18} color="#333" />
-                    </div>
+                    <UserProfile />
 
                     {isMobile && (
-                        <button
-                            onClick={() => setMenuOpen((prev) => !prev)}
-                            style={{
-                                background: "none",
-                                border: "none",
-                                cursor: "pointer",
-                                color: "white",
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                            aria-label="Toggle menu"
-                        >
+                        <button onClick={() => setMenuOpen((prev) => !prev)}
+                            style={{ background: "none", border: "none", color: "white" }}>
                             {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
                         </button>
                     )}
@@ -292,54 +251,16 @@ function Header() {
             </div>
 
             {isMobile && menuOpen && (
-                <div
-                    style={{
-                        backgroundColor: "#2e5060",
-                        color: "white",
-                        padding: "8px 0",
-                        position: "absolute",
-                        top: "100%",
-                        left: 0,
-                        right: 0,
-                        zIndex: 100,
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                    }}
-                >
-                    <div style={{ padding: "8px 20px" }}>
-                        <div style={{ position: "relative" }}>
-                            <FiSearch
-                                size={16}
-                                style={{
-                                    position: "absolute",
-                                    top: "50%",
-                                    left: 10,
-                                    transform: "translateY(-50%)",
-                                    color: "#aaa",
-                                }}
-                            />
-                            <input
-                                placeholder="Search..."
-                                style={{
-                                    width: "100%",
-                                    boxSizing: "border-box",
-                                    padding: "8px 10px 8px 34px",
-                                    border: "1px solid #ccc",
-                                    borderRadius: 4,
-                                    outline: "none",
-                                    background: "#fff",
-                                }}
-                            />
-                        </div>
-                    </div>
-
+                <div style={{
+                    backgroundColor: "#2e5060",
+                    color: "white",
+                    position: "absolute",
+                    width: "100%",
+                    zIndex: 100
+                }}>
                     {navArray.map((nav, index) => {
-                        const subArray = Array.isArray(nav.sublinks)
-                            ? nav.sublinks
-                            : nav.sublinks
-                                ? [nav.sublinks]
-                                : [];
-
                         const isExpanded = mobileExpandedIndex === index;
+                        const subArray = nav.sublinks || [];
 
                         return (
                             <div key={index}>
@@ -347,41 +268,21 @@ function Header() {
                                     style={{
                                         display: "flex",
                                         justifyContent: "space-between",
-                                        alignItems: "center",
-                                        padding: "12px 20px",
-                                        borderBottom: "1px solid rgba(255,255,255,0.1)",
-                                        cursor: subArray.length > 0 ? "pointer" : "default",
+                                        padding: "12px 20px"
                                     }}
-                                    onClick={() => {
-                                        if (subArray.length > 0) {
-                                            setMobileExpandedIndex(
-                                                isExpanded ? null : index
-                                            );
-                                        }
-                                    }}
+                                    onClick={() =>
+                                        subArray.length > 0 &&
+                                        setMobileExpandedIndex(isExpanded ? null : index)
+                                    }
                                 >
-                                    <Link
-                                        to={nav.path}
-                                        style={{
-                                            textDecoration: "none",
-                                            color: "white",
-                                            fontWeight: "500",
-                                            fontSize: 15,
-                                        }}
-                                        onClick={() => setMenuOpen(false)}
-                                    >
+                                    <Link to={nav.path} style={{ color: "white" }}>
                                         {nav.title}
                                     </Link>
 
                                     {subArray.length > 0 && (
                                         <FiChevronDown
-                                            size={16}
-                                            color="white"
                                             style={{
-                                                transition: "transform 0.2s",
-                                                transform: isExpanded
-                                                    ? "rotate(180deg)"
-                                                    : "rotate(0deg)",
+                                                transform: isExpanded ? "rotate(180deg)" : ""
                                             }}
                                         />
                                     )}
@@ -395,14 +296,9 @@ function Header() {
                                                 to={`${nav.path}/${sub.path}`}
                                                 style={{
                                                     display: "block",
-                                                    padding: "10px 32px",
-                                                    textDecoration: "none",
-                                                    color: "#cce0ea",
-                                                    fontSize: 14,
-                                                    borderBottom:
-                                                        "1px solid rgba(255,255,255,0.05)",
+                                                    padding: "10px 30px",
+                                                    color: "#cce0ea"
                                                 }}
-                                                onClick={() => setMenuOpen(false)}
                                             >
                                                 {sub.title}
                                             </Link>
@@ -419,4 +315,3 @@ function Header() {
 }
 
 export default Header;
-
