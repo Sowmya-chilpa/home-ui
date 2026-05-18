@@ -7,11 +7,14 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 const AEM_HOST = "https://katrina-nonmonogamous-pseudofamously.ngrok-free.dev";
 const ENDPOINT = `${AEM_HOST}/content/cq:graphql/TDTraining/endpoint.json`;
 
-function AEMImage({ src, alt }) {
-    const [objectUrl, setObjectUrl] = useState(null);
+const imageCache = {};
+
+function AEMImage({ src, alt, shouldLoad }) {
+    const [objectUrl, setObjectUrl] = useState(() => imageCache[src] || null);
 
     useEffect(() => {
-        let url;
+        if (!shouldLoad || imageCache[src]) return;
+
         fetch(src, {
             headers: {
                 "ngrok-skip-browser-warning": "true",
@@ -20,16 +23,56 @@ function AEMImage({ src, alt }) {
         })
             .then((res) => res.blob())
             .then((blob) => {
-                url = URL.createObjectURL(blob);
+                const url = URL.createObjectURL(blob);
+                imageCache[src] = url;
                 setObjectUrl(url);
             })
             .catch(console.error);
+    }, [src, shouldLoad]);
 
-        return () => { if (url) URL.revokeObjectURL(url); };
-    }, [src]);
+    if (!objectUrl) return (
+        <>
+            <style>{`
+                @keyframes spin {
+                    0%   { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `}</style>
+            <div style={{
+                width: "100%",
+                height: "50vw",
+                maxHeight: "500px",
+                borderRadius: "15px",
+                background: "#f0f0f0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+            }}>
+                <div style={{
+                    width: "48px",
+                    height: "48px",
+                    border: "5px solid #ddd",
+                    borderTop: "5px solid rgb(110, 154, 177)",
+                    borderRadius: "50%",
+                    animation: "spin 0.9s linear infinite",
+                }} />
+            </div>
+        </>
+    );
 
-    if (!objectUrl) return <div style={{ width: "100%", height: "50vw", maxHeight: "500px", background: "#eee", }} />;
-    return <img src={objectUrl} alt={alt} style={{ width: "100%", height: "50vw", maxHeight: "500px", objectFit: "cover", borderRadius: "15px" }} />;
+    return (
+        <img
+            src={objectUrl}
+            alt={alt}
+            style={{
+                width: "100%",
+                height: "50vw",
+                maxHeight: "500px",
+                objectFit: "cover",
+                borderRadius: "15px",
+            }}
+        />
+    );
 }
 
 function AEMCarousel() {
@@ -38,6 +81,16 @@ function AEMCarousel() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [autoPlay, setAutoPlay] = useState(true);
+    const [loadedIndices, setLoadedIndices] = useState(new Set([0, 1]));
+
+    useEffect(() => {
+        setLoadedIndices((prev) => {
+            const updated = new Set(prev);
+            updated.add(current);
+            updated.add(current + 1);
+            return updated;
+        });
+    }, [current]);
 
     useEffect(() => {
         fetch(ENDPOINT, {
@@ -49,14 +102,14 @@ function AEMCarousel() {
             },
             body: JSON.stringify({
                 query: `{
-          carouselModelList {
-            items {
-              title
-              image { ... on ImageRef { _path } }
-              description { plaintext }
-            }
-          }
-        }`,
+                    carouselModelList {
+                        items {
+                            title
+                            image { ... on ImageRef { _path } }
+                            description { plaintext }
+                        }
+                    }
+                }`,
             }),
         })
             .then((res) => res.json())
@@ -80,7 +133,8 @@ function AEMCarousel() {
             style={{
                 position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)",
                 zIndex: 10, background: "white", border: "none", borderRadius: "50%",
-                width: 40, height: 40, fontSize: 18, cursor: current === 0 ? "not-allowed" : "pointer",
+                width: 40, height: 40, fontSize: 18,
+                cursor: current === 0 ? "not-allowed" : "pointer",
                 opacity: current === 0 ? 0.3 : 1,
             }}
         >
@@ -95,7 +149,8 @@ function AEMCarousel() {
             style={{
                 position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
                 zIndex: 10, background: "white", border: "none", borderRadius: "50%",
-                width: 40, height: 40, fontSize: 18, cursor: current === slides.length - 1 ? "not-allowed" : "pointer",
+                width: 40, height: 40, fontSize: 18,
+                cursor: current === slides.length - 1 ? "not-allowed" : "pointer",
                 opacity: current === slides.length - 1 ? 0.3 : 1,
             }}
         >
@@ -104,7 +159,7 @@ function AEMCarousel() {
     );
 
     return (
-        <div style={{ maxWidth: "100%", padding: "18px", }}>
+        <div style={{ maxWidth: "100%", padding: "18px" }}>
             <Carousel
                 infiniteLoop={true}
                 autoPlay={autoPlay}
@@ -119,13 +174,17 @@ function AEMCarousel() {
                 renderArrowNext={renderArrowNext}
             >
                 {slides.map((slide, index) => (
-                    <div key={index} style={{ position: "relative", }}>
-                        <AEMImage src={`${AEM_HOST}${slide.image._path}`} alt={slide.title} />
+                    <div key={index} style={{ position: "relative" }}>
+                        <AEMImage
+                            src={`${AEM_HOST}${slide.image._path}`}
+                            alt={slide.title}
+                            shouldLoad={loadedIndices.has(index)}
+                        />
                     </div>
                 ))}
-
             </Carousel>
-            <div style={{ display: "flex", justifyContent: "center", gap: "8px", }}>
+
+            <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
                 <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "18px", marginRight: "10px" }}>
                     {slides.map((_, index) => (
                         <button
@@ -157,17 +216,17 @@ function AEMCarousel() {
                             padding: 0,
                             display: "inline-flex",
                             alignItems: "center",
-                            justifyContent: "center"
-
+                            justifyContent: "center",
                         }}
                     >
-                        {autoPlay ? <><FiPauseCircle /> <span style={{ fontSize: "15px", marginLeft: "4px" }}>Pause</span></> :
-                            <><FaCirclePlay /> <span style={{ fontSize: "15px", marginLeft: "4px" }}>Play</span></>}
+                        {autoPlay
+                            ? <><FiPauseCircle /><span style={{ fontSize: "15px", marginLeft: "4px" }}>Pause</span></>
+                            : <><FaCirclePlay /><span style={{ fontSize: "15px", marginLeft: "4px" }}>Play</span></>
+                        }
                     </button>
                 </div>
             </div>
-
-        </div >
+        </div>
     );
 }
 

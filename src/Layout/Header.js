@@ -27,8 +27,23 @@ function AEMImage({ src, alt, style }) {
         return () => { if (url) URL.revokeObjectURL(url); };
     }, [src]);
 
-    if (!objectUrl) return <div style={{ width: 60, height: 40, background: "#eee" }} />;
-    return <img src={objectUrl} alt={alt} style={style} />;
+    if (!objectUrl) return (
+        <div style={{ width: "clamp(40px, 8vw, 60px)", height: "clamp(28px, 5vw, 40px)", background: "#eee", borderRadius: 4 }} />
+    );
+
+    return (
+        <img
+            src={objectUrl}
+            alt={alt}
+            style={{
+                maxWidth: "100%",
+                height: "auto",
+                objectFit: "contain",
+                display: "block",
+                ...style,
+            }}
+        />
+    );
 }
 
 function Header() {
@@ -38,13 +53,18 @@ function Header() {
     const timeoutRef = useRef(null);
     const [menuOpen, setMenuOpen] = useState(false);
     const [mobileExpandedIndex, setMobileExpandedIndex] = useState(null);
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 900);
 
     useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        const handleResize = () => setIsMobile(window.innerWidth < 900);
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, []);
+
+    useEffect(() => {
+        if (!isMobile) setMenuOpen(false);
+    }, [isMobile]);
 
     useEffect(() => {
         fetch(ENDPOINT, {
@@ -101,7 +121,6 @@ function Header() {
             .forEach((titleKey) => {
                 const suffix = titleKey.replace("title", "");
                 const pathKey = suffix ? `path${suffix}` : "path";
-
                 if (raw[titleKey] && raw[pathKey]) {
                     navArray.push({
                         title: raw[titleKey],
@@ -119,6 +138,7 @@ function Header() {
         textDecoration: "none",
         color: "white",
         fontWeight: "500",
+        whiteSpace: "nowrap",
     };
 
     return (
@@ -129,89 +149,95 @@ function Header() {
                 alignItems: "center",
                 padding: "12px 24px",
                 backgroundColor: "rgb(110 154 177)",
+                boxSizing: "border-box",
+                width: "100%",
             }}>
 
-                <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                    <AEMImage src={`${AEM_HOST}${logo._path}`} alt="logo" style={{ height: 50 }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 20, minWidth: 0 }}>
 
-                    {!isMobile &&
-                        leftNav.map((nav, index) => {
-                            const subArray = Array.isArray(nav.sublinks)
-                                ? nav.sublinks
-                                : nav.sublinks
-                                    ? [nav.sublinks]
-                                    : [];
+                    <div style={{ flexShrink: 0 }}>
+                        <AEMImage
+                            src={`${AEM_HOST}${logo._path}`}
+                            alt="logo"
+                            style={{ height: "clamp(30px, 4vw, 50px)" }}
+                        />
+                    </div>
 
-                            return (
-                                <div
-                                    key={index}
-                                    style={{ position: "relative" }}
-                                    onMouseEnter={() => {
-                                        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                                        setHoveredIndex(index);
-                                    }}
-                                    onMouseLeave={() => {
-                                        timeoutRef.current = setTimeout(() => setHoveredIndex(null), 200);
+                    {!isMobile && leftNav.map((nav, index) => {
+                        const subArray = Array.isArray(nav.sublinks)
+                            ? nav.sublinks
+                            : nav.sublinks ? [nav.sublinks] : [];
+
+                        return (
+                            <div
+                                key={index}
+                                style={{ position: "relative", flexShrink: 0 }}
+                                onMouseEnter={() => {
+                                    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                                    setHoveredIndex(index);
+                                }}
+                                onMouseLeave={() => {
+                                    timeoutRef.current = setTimeout(() => setHoveredIndex(null), 200);
+                                }}
+                            >
+                                <Link
+                                    to={nav.path}
+                                    style={{
+                                        textDecoration: "none",
+                                        color: "white",
+                                        fontWeight: "500",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 4,
+                                        whiteSpace: "nowrap",
                                     }}
                                 >
-                                    <Link
-                                        to={nav.path}
+                                    {nav.title}
+                                </Link>
+
+                                {hoveredIndex === index && subArray.length > 0 && (
+                                    <div
+                                        onMouseEnter={() => {
+                                            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                                        }}
+                                        onMouseLeave={() => {
+                                            timeoutRef.current = setTimeout(() => setHoveredIndex(null), 200);
+                                        }}
                                         style={{
-                                            textDecoration: "none",
-                                            color: "white",
-                                            marginRight: 20,
-                                            fontWeight: "500",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 4,
+                                            position: "absolute",
+                                            top: "35px",
+                                            left: 0,
+                                            background: "rgb(110 154 177)",
+                                            borderRadius: 6,
+                                            padding: "2px",
+                                            minWidth: 60,
+                                            boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                                            zIndex: 10,
                                         }}
                                     >
-                                        {nav.title}
-                                    </Link>
-
-                                    {hoveredIndex === index && subArray.length > 0 && (
-                                        <div
-                                            onMouseEnter={() => {
-                                                if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                                            }}
-                                            onMouseLeave={() => {
-                                                timeoutRef.current = setTimeout(() => setHoveredIndex(null), 200);
-                                            }}
-                                            style={{
-                                                position: "absolute",
-                                                top: "35px",
-                                                left: 0,
-                                                background: "rgb(110 154 177)",
-                                                color: "#000",
-                                                borderRadius: 6,
-                                                padding: "2px",
-                                                minWidth: 60,
-                                                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                                                zIndex: 10,
-                                            }}
-                                        >
-                                            {subArray.map((sub, i) => (
-                                                <Link
-                                                    key={i}
-                                                    to={`${nav.path}/${sub.path}`}
-                                                    style={{
-                                                        display: "block",
-                                                        padding: "8px 12px",
-                                                        textDecoration: "none",
-                                                        color: "white",
-                                                    }}
-                                                >
-                                                    {sub.title}
-                                                </Link>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
+                                        {subArray.map((sub, i) => (
+                                            <Link
+                                                key={i}
+                                                to={`${nav.path}/${sub.path}`}
+                                                style={{
+                                                    display: "block",
+                                                    padding: "8px 12px",
+                                                    textDecoration: "none",
+                                                    color: "white",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                {sub.title}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 15, flexShrink: 0 }}>
 
                     {!isMobile && rightNav.map((nav, index) => (
                         <Link key={index} to={nav.path} style={linkStyle}>
@@ -233,7 +259,8 @@ function Header() {
                                 style={{
                                     padding: "6px 10px 6px 32px",
                                     border: "1px solid #ccc",
-                                    borderRadius: 4
+                                    borderRadius: 4,
+                                    width: "140px",
                                 }}
                             />
                         </div>
@@ -242,8 +269,10 @@ function Header() {
                     <UserProfile />
 
                     {isMobile && (
-                        <button onClick={() => setMenuOpen((prev) => !prev)}
-                            style={{ background: "none", border: "none", color: "white" }}>
+                        <button
+                            onClick={() => setMenuOpen((prev) => !prev)}
+                            style={{ background: "none", border: "none", color: "white", cursor: "pointer", padding: 0 }}
+                        >
                             {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
                         </button>
                     )}
@@ -256,33 +285,66 @@ function Header() {
                     color: "white",
                     position: "absolute",
                     width: "100%",
-                    zIndex: 100
+                    zIndex: 100,
+                    boxSizing: "border-box",
                 }}>
+                    <div style={{ padding: "12px 20px", borderBottom: "1px solid #3d6070" }}>
+                        <div style={{ position: "relative" }}>
+                            <FiSearch size={16} style={{
+                                position: "absolute",
+                                top: "50%",
+                                left: 10,
+                                transform: "translateY(-50%)",
+                                color: "#aaa"
+                            }} />
+                            <input
+                                placeholder="Search..."
+                                style={{
+                                    padding: "8px 10px 8px 32px",
+                                    border: "1px solid #4a7a8a",
+                                    borderRadius: 4,
+                                    width: "100%",
+                                    background: "#3d6070",
+                                    color: "white",
+                                    boxSizing: "border-box",
+                                }}
+                            />
+                        </div>
+                    </div>
+
                     {navArray.map((nav, index) => {
                         const isExpanded = mobileExpandedIndex === index;
                         const subArray = nav.sublinks || [];
 
                         return (
-                            <div key={index}>
+                            <div key={index} style={{ borderBottom: "1px solid #3d6070" }}>
                                 <div
                                     style={{
                                         display: "flex",
                                         justifyContent: "space-between",
-                                        padding: "12px 20px"
+                                        alignItems: "center",
+                                        padding: "12px 20px",
+                                        cursor: subArray.length > 0 ? "pointer" : "default",
                                     }}
                                     onClick={() =>
                                         subArray.length > 0 &&
                                         setMobileExpandedIndex(isExpanded ? null : index)
                                     }
                                 >
-                                    <Link to={nav.path} style={{ color: "white" }}>
+                                    <Link
+                                        to={nav.path}
+                                        style={{ color: "white", textDecoration: "none" }}
+                                        onClick={() => setMenuOpen(false)}
+                                    >
                                         {nav.title}
                                     </Link>
 
                                     {subArray.length > 0 && (
                                         <FiChevronDown
                                             style={{
-                                                transform: isExpanded ? "rotate(180deg)" : ""
+                                                transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                                                transition: "transform 0.2s",
+                                                color: "white",
                                             }}
                                         />
                                     )}
@@ -297,8 +359,10 @@ function Header() {
                                                 style={{
                                                     display: "block",
                                                     padding: "10px 30px",
-                                                    color: "#cce0ea"
+                                                    color: "#cce0ea",
+                                                    textDecoration: "none",
                                                 }}
+                                                onClick={() => setMenuOpen(false)}
                                             >
                                                 {sub.title}
                                             </Link>
