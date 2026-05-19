@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaCirclePlay } from "react-icons/fa6";
 import { FiPauseCircle } from "react-icons/fi";
 import { Carousel } from "react-responsive-carousel";
@@ -7,14 +7,11 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 const AEM_HOST = "https://katrina-nonmonogamous-pseudofamously.ngrok-free.dev";
 const ENDPOINT = `${AEM_HOST}/content/cq:graphql/TDTraining/endpoint.json`;
 
-const imageCache = {};
-
-function AEMImage({ src, alt, shouldLoad }) {
-    const [objectUrl, setObjectUrl] = useState(() => imageCache[src] || null);
+function AEMImage({ src, alt }) {
+    const [objectUrl, setObjectUrl] = useState(null);
 
     useEffect(() => {
-        if (!shouldLoad || imageCache[src]) return;
-
+        let url;
         fetch(src, {
             headers: {
                 "ngrok-skip-browser-warning": "true",
@@ -23,12 +20,13 @@ function AEMImage({ src, alt, shouldLoad }) {
         })
             .then((res) => res.blob())
             .then((blob) => {
-                const url = URL.createObjectURL(blob);
-                imageCache[src] = url;
+                url = URL.createObjectURL(blob);
                 setObjectUrl(url);
             })
             .catch(console.error);
-    }, [src, shouldLoad]);
+
+        return () => { if (url) URL.revokeObjectURL(url); };
+    }, [src]);
 
     if (!objectUrl) return (
         <>
@@ -81,16 +79,37 @@ function AEMCarousel() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [autoPlay, setAutoPlay] = useState(true);
-    const [loadedIndices, setLoadedIndices] = useState(new Set([0, 1]));
+    const [visibleSlides, setVisibleSlides] = useState(new Set());
+    const carouselRef = useRef(null);
 
     useEffect(() => {
-        setLoadedIndices((prev) => {
+        if (slides.length === 0) return;
+        setVisibleSlides((prev) => {
             const updated = new Set(prev);
             updated.add(current);
-            updated.add(current + 1);
             return updated;
         });
-    }, [current]);
+    }, [current, slides.length]);
+
+    useEffect(() => {
+        if (slides.length === 0) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setVisibleSlides((prev) => {
+                        const updated = new Set(prev);
+                        updated.add(current);
+                        return updated;
+                    });
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (carouselRef.current) observer.observe(carouselRef.current);
+        return () => observer.disconnect();
+    }, [slides.length, current]);
 
     useEffect(() => {
         fetch(ENDPOINT, {
@@ -159,7 +178,7 @@ function AEMCarousel() {
     );
 
     return (
-        <div style={{ maxWidth: "100%", padding: "18px" }}>
+        <div ref={carouselRef} style={{ maxWidth: "100%", padding: "18px" }}>
             <Carousel
                 infiniteLoop={true}
                 autoPlay={autoPlay}
@@ -175,17 +194,30 @@ function AEMCarousel() {
             >
                 {slides.map((slide, index) => (
                     <div key={index} style={{ position: "relative" }}>
-                        <AEMImage
-                            src={`${AEM_HOST}${slide.image._path}`}
-                            alt={slide.title}
-                            shouldLoad={loadedIndices.has(index)}
-                        />
+
+                        {visibleSlides.has(index) ? (
+                            <AEMImage
+                                src={`${AEM_HOST}${slide.image._path}`}
+                                alt={slide.title}
+                            />
+                        ) : (
+                            <div style={{
+                                width: "100%",
+                                height: "50vw",
+                                maxHeight: "500px",
+                                borderRadius: "15px",
+                                background: "#f0f0f0",
+                            }} />
+                        )}
                     </div>
                 ))}
             </Carousel>
 
             <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
-                <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "18px", marginRight: "10px" }}>
+                <div style={{
+                    display: "flex", justifyContent: "center",
+                    gap: "8px", marginTop: "18px", marginRight: "10px",
+                }}>
                     {slides.map((_, index) => (
                         <button
                             key={index}
@@ -195,7 +227,9 @@ function AEMCarousel() {
                                 height: index === current ? "10px" : "8px",
                                 borderRadius: "50%",
                                 background: index === current ? "white" : "#bbb",
-                                border: index === current ? "2px solid rgb(110, 154, 177)" : "2px solid #bbb",
+                                border: index === current
+                                    ? "2px solid rgb(110, 154, 177)"
+                                    : "2px solid #bbb",
                                 cursor: "pointer",
                                 padding: 0,
                                 transition: "all 0.3s ease",
@@ -208,15 +242,10 @@ function AEMCarousel() {
                     <button
                         onClick={() => setAutoPlay((prev) => !prev)}
                         style={{
-                            color: "black",
-                            fontSize: "25px",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            padding: 0,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
+                            color: "black", fontSize: "25px",
+                            background: "none", border: "none", cursor: "pointer",
+                            padding: 0, display: "inline-flex",
+                            alignItems: "center", justifyContent: "center",
                         }}
                     >
                         {autoPlay
