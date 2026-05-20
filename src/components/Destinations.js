@@ -5,9 +5,10 @@ import "./Destinations.css";
 const AEM_HOST = "https://katrina-nonmonogamous-pseudofamously.ngrok-free.dev";
 const ENDPOINT = `${AEM_HOST}/content/cq:graphql/TDTraining/endpoint.json`;
 
-function Destinations() {
+function Destinations({ isCarousel = true }) {
   const [destinations, setDestinations] = useState([]);
   const scrollRef = useRef(null);
+
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
@@ -22,34 +23,43 @@ function Destinations() {
       },
       body: JSON.stringify({
         query: `
-          {
-            destinationList {
-              items {
-                destinationName
-                slug
-                tagLine
-                heroImage {
-                  ... on ImageRef {
-                    _path
-                  }
+        {
+          destinationList {
+            items {
+              destinationName
+              slug
+              tagLine
+              heroImage {
+                ... on ImageRef {
+                  _path
                 }
-                isfeatured
               }
+              isfeatured
             }
           }
+        }
         `,
       }),
     })
       .then((res) => res.json())
       .then((data) => {
         const all = data?.data?.destinationList?.items || [];
-        const featured = all.filter((item) => item.isfeatured === true);
-        setDestinations(featured);
+
+        if (isCarousel) {
+          const featured = all.filter(
+            (item) => item.isfeatured === true
+          );
+          setDestinations(featured);
+        } else {
+          setDestinations(all);
+        }
       })
       .catch(console.error);
-  }, []);
+  }, [isCarousel]);
 
   const handleMouseDown = (e) => {
+    if (!isCarousel) return;
+
     isDragging.current = true;
     startX.current = e.pageX - scrollRef.current.offsetLeft;
     scrollLeft.current = scrollRef.current.scrollLeft;
@@ -57,35 +67,57 @@ function Destinations() {
   };
 
   const handleMouseMove = (e) => {
-    if (!isDragging.current) return;
+    if (!isDragging.current || !isCarousel) return;
+
     e.preventDefault();
     const x = e.pageX - scrollRef.current.offsetLeft;
     const walk = x - startX.current;
-    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+
+    scrollRef.current.scrollLeft =
+      scrollLeft.current - walk;
   };
 
   const handleMouseUp = () => {
     isDragging.current = false;
-    scrollRef.current.style.cursor = "grab";
+
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = "grab";
+    }
   };
 
   const handleTouchStart = (e) => {
-    startX.current = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    if (!isCarousel) return;
+
+    startX.current =
+      e.touches[0].pageX - scrollRef.current.offsetLeft;
+
     scrollLeft.current = scrollRef.current.scrollLeft;
   };
 
   const handleTouchMove = (e) => {
-    const x = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    if (!isCarousel) return;
+
+    const x =
+      e.touches[0].pageX - scrollRef.current.offsetLeft;
+
     const walk = x - startX.current;
-    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+
+    scrollRef.current.scrollLeft =
+      scrollLeft.current - walk;
   };
 
   return (
-    <div className="destinationsContainer">
-      <h2 className="destinationsHeading">Don't Know where to go? Explore here</h2>
+    <div className={ isCarousel ? "destinationsContainer" : "destinationsContainer destinationsGridPage"}>
+      <h2 className="destinationsHeading">
+        Don't Know where to go? Explore here
+      </h2>
 
       <div
-        className="scrollContainer"
+        className={
+          isCarousel
+            ? "scrollContainer"
+            : "gridContainer"
+        }
         ref={scrollRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -95,7 +127,11 @@ function Destinations() {
         onTouchMove={handleTouchMove}
       >
         {destinations.map((item) => (
-          <DestinationCard key={item.slug} data={item} />
+          <DestinationCard
+            key={item.slug}
+            data={item}
+            isCarousel={isCarousel}
+          />
         ))}
       </div>
     </div>
